@@ -39,6 +39,7 @@ private:
     const byte _bq77307Address = 0x08;
     const int I2C_BUFFER_LENGTH = 32;
     bool CRC_ENABLED = false;
+    bool REGOUT_ENABLED = false;
 };
 
 #endif // BQ77307_H

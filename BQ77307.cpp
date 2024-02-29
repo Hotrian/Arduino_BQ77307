@@ -570,32 +570,27 @@ bool BQ77307::readAndDecodeREGOUTControl()
 }
 
 // This command is sent to reset the device
-void BQ77307::Reset()
-{
+void BQ77307::Reset() {
 	sendCommand(0x0012);
 }
 
 // This command is sent to toggle the FET_EN bit in Battery Status().
-void BQ77307::Toggle_FET_Control()
-{
+void BQ77307::Toggle_FET_Control() {
 	sendCommand(0x0022);
 }
 
 // This command is sent to place the device in SEALED mode
-void BQ77307::Seal_Configuration()
-{
+void BQ77307::Seal_Configuration() {
 	sendCommand(0x0030);
 }
 
 // This command is sent to place the device in CONFIG_UPDATE mode
-void BQ77307::Enter_Configuration_Mode()
-{
+void BQ77307::Enter_Configuration_Mode() {
 	sendCommand(0x0090);
 }
 
 // This command is sent to exit CONFIG_UPDATE mode
-void BQ77307::Exit_Configuration_Mode()
-{
+void BQ77307::Exit_Configuration_Mode() {
 	sendCommand(0x0092);
 }
 
@@ -613,6 +608,22 @@ void BQ77307::Disable_CRC() {
 	value &= ~1; // Clear bit 0.
 	writeRegister(0x9017, value); // Write the new value back to the register.
 	CRC_ENABLED = false; // Set the flag to false as CRC is now disabled.
+}
+
+void BQ77307::Enable_REGOUT() {
+	if (REGOUT_ENABLED) return; // If REGOUT is already enabled, do nothing.
+	int value = readRegister(0x9015); // Read the current value of the register.
+	value |= 0x08; // Set bit 3.
+	writeRegister(0x9015, value); // Write the new value back to the register.
+	REGOUT_ENABLED = true; // Set the flag to true as REGOUT is now enabled.
+}
+
+void BQ77307::Disable_REGOUT() {
+	if (!REGOUT_ENABLED) return; // If REGOUT is already disabled, do nothing.
+	int value = readRegister(0x9015); // Read the current value of the register.
+	value &= ~0x08; // Clear bit 3.
+	writeRegister(0x9015, value); // Write the new value back to the register.
+	REGOUT_ENABLED = false; // Set the flag to false as REGOUT is now disabled.
 }
 
 // Sub Commands 9.4

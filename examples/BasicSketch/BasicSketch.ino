@@ -9,11 +9,13 @@ void setup() {
   // Uncomment the next line if your device setup requires CRC checks
   // bq77307.Enable_CRC(); // Enable CRC checks if your device requires it
 
+  bq77303.Enter_Configuration_Mode();
+  bq77303.Enable_REGOUT();
+  bq77303.Exit_Configuration_Mode();
+
   Serial.println("BQ77307 status:");
-  bq77307.readAndDecodeSafetyAlertA(); // Read and decode Safety Alert A
-  bq77307.readAndDecodeSafetyStatusA(); // Read and decode Safety Status A
-  bq77307.readAndDecodeSafetyAlertB(); // Read and decode Safety Alert B
-  bq77307.readAndDecodeSafetyStatusB(); // Read and decode Safety Status B
+  bq77307.readAndDecodeAlarmStatus();
+  bq77307.readAndDecodeREGOUTControl()
 }
 
 void loop() {
