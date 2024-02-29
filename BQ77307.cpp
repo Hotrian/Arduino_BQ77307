@@ -1,15 +1,15 @@
 #include <Wire.h>
 
-const byte _bq77307Address = 0x08;
-const int I2C_BUFFER_LENGTH = 32;
-
-bool CRC_ENABLED = false;
+BQ77307::BQ77307() {
+	Wire.begin(); // Initialize I2C communication
+	CRC_ENABLED = false; // Default CRC check to disabled
+}
 
 // Function to read multiple bytes from a register from BQ77307 with timeout
-int readRegisterWithoutCRC(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000) {
+int BQ77307::readRegisterWithoutCRC(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000) {
 	if (numBytes == 0 || numBytes > 4) return -1; // Adjust as necessary for the max expected bytes to be read
 	byte data[numBytes]; // Buffer for address byte, data bytes, and CRC byte.
-	int readRegister = readRegisterWithoutCR120000000000C(regAddress, &data, numBytes, timeout);
+	int readRegister = readRegisterWithoutCRC(regAddress, &data, numBytes, timeout);
 	if (readRegister == -1) return -1;
 
 	// Accumulate the result here.
@@ -24,7 +24,7 @@ int readRegisterWithoutCRC(byte regAddress, byte numBytes = 1, unsigned long tim
 
 // Function to read bytes from a register without CRC checking from BQ77307
 // Returns the number of bytes read or -1 if an error occurs.
-int readRegisterWithoutCRC(byte regAddress, byte* buffer, byte numBytes = 1, unsigned long timeout = 1000)
+int BQ77307::readRegisterWithoutCRC(byte regAddress, byte* buffer, byte numBytes = 1, unsigned long timeout = 1000)
 {
 	// Check buffer is not null and number of bytes is within bounds
 	if (buffer == nullptr || numBytes == 0 || numBytes > I2C_BUFFER_LENGTH) {
@@ -56,7 +56,7 @@ int readRegisterWithoutCRC(byte regAddress, byte* buffer, byte numBytes = 1, uns
 }
 
 // Function to write to a register on BQ77307
-void writeRegisterWithoutCRC(byte regAddress, byte value)
+void BQ77307::writeRegisterWithoutCRC(byte regAddress, byte value)
 {
 	Wire.beginTransmission(_bq77307Address);
 	Wire.write(regAddress);
@@ -65,7 +65,7 @@ void writeRegisterWithoutCRC(byte regAddress, byte value)
 }
 
 // Function to write to a register on BQ77307
-void sendCommand(byte regAddress)
+void BQ77307::sendCommand(byte regAddress)
 {
 	Wire.beginTransmission(_bq77307Address);
 	Wire.write(regAddress);
@@ -73,7 +73,7 @@ void sendCommand(byte regAddress)
 }
 
 // Taken from the data sheet: https://www.ti.com/lit/ug/sluucy8/sluucy8.pdf?ts=1709147814970
-byte calculateCRC(byte* data, byte length)
+byte BQ77307::calculateCRC(byte* data, byte length)
 {
 	byte crc = 0; // Initial value is 0
 	for (byte i = 0; i < length; i++) {
@@ -92,7 +92,7 @@ byte calculateCRC(byte* data, byte length)
 }
 
 // Function to read multiple bytes from a register with CRC checking from BQ77307
-int readRegisterWithCRC(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000) {
+int BQ77307::readRegisterWithCRC(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000) {
 	if (numBytes == 0 || numBytes > 4) return -1; // Adjust as necessary for the max expected bytes to be read
 	byte data[numBytes+2]; // Buffer for address byte, data bytes, and CRC byte.
 	int readRegister = readRegisterWithCRC(regAddress, &data, numBytes, timeout);
@@ -110,7 +110,7 @@ int readRegisterWithCRC(byte regAddress, byte numBytes = 1, unsigned long timeou
 
 // Function to read bytes from a register with CRC checking from BQ77307
 // Returns the number of bytes read or -1 if an error occurs.
-int readRegisterWithCRC(byte regAddress, byte* buffer, byte numBytes, unsigned long timeout = 1000)
+int BQ77307::readRegisterWithCRC(byte regAddress, byte* buffer, byte numBytes, unsigned long timeout = 1000)
 {
 	// Check buffer is not null and number of bytes is within bounds
 	if (buffer == nullptr || numBytes == 0 || numBytes > I2C_BUFFER_LENGTH) {
@@ -156,7 +156,7 @@ int readRegisterWithCRC(byte regAddress, byte* buffer, byte numBytes, unsigned l
 	return numBytes; // Return the number of bytes read, not including CRC
 }
 
-void writeRegisterWithCRC(byte regAddress, byte value)
+void BQ77307::writeRegisterWithCRC(byte regAddress, byte value)
 {
 	byte data[3];
 	// For write operations, the CRC covers the slave address with write bit (0),
@@ -175,7 +175,7 @@ void writeRegisterWithCRC(byte regAddress, byte value)
 	Wire.endTransmission(); // End transmission and release the I2C bus
 }
 
-int readRegister(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000)
+int BQ77307::readRegister(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000)
 {
 	if (CRC_ENABLED)
 	{
@@ -187,7 +187,7 @@ int readRegister(byte regAddress, byte numBytes = 1, unsigned long timeout = 100
 	}
 }
 
-int readRegister(byte regAddress, byte* buffer, byte numBytes, unsigned long timeout = 1000)
+int BQ77307::readRegister(byte regAddress, byte* buffer, byte numBytes, unsigned long timeout = 1000)
 {
 	if (CRC_ENABLED)
 	{
@@ -201,7 +201,7 @@ int readRegister(byte regAddress, byte* buffer, byte numBytes, unsigned long tim
 
 // Function to read and decode the Safety Alert A register (command 0x02)
 // returns true if all Safety Alert A bits are untripped
-bool readAndDecodeSafetyAlertA()
+bool BQ77307::readAndDecodeSafetyAlertA()
 {
 	int safetyAlertA = readRegister(0x02); // Read the register with CRC checking
 	if (safetyAlertA == -1)
@@ -229,7 +229,7 @@ bool readAndDecodeSafetyAlertA()
 
 // Function to read and decode the Safety Status A register (command 0x03)
 // returns true if all Safety Status A bits are untripped
-bool readAndDecodeSafetyFaultA()
+bool BQ77307::readAndDecodeSafetyFaultA()
 {
 	int safetyStatusA = readRegister(0x03);
 	if (safetyStatusA == -1)
@@ -258,7 +258,7 @@ bool readAndDecodeSafetyFaultA()
 
 // Function to read and decode the Safety Alert B register (command 0x04)
 // returns true if all Safety Alert B bits are untripped
-bool readAndDecodeSafetyAlertB()
+bool BQ77307::readAndDecodeSafetyAlertB()
 {
 	int safetyAlertB = readRegister(0x04);
 	if (safetyAlertB == -1)
@@ -287,7 +287,7 @@ bool readAndDecodeSafetyAlertB()
 
 // Function to read and decode the Safety Status B register (command 0x05)
 // returns true if all Safety Status B bits are untripped
-bool readAndDecodeSafetyFaultB()
+bool BQ77307::readAndDecodeSafetyFaultB()
 {
 	int safetyStatusB = readRegister(0x05);
 	if (safetyStatusB == -1)
@@ -318,7 +318,7 @@ bool readAndDecodeSafetyFaultB()
 
 // Function to read and decode the Safety Status B register (command 0x05)
 // returns true if all Safety Status B bits are untripped
-bool readAndDecodeBatteryStatus()
+bool BQ77307::readAndDecodeBatteryStatus()
 {
 	int batteryStatus = readRegister(0x12, 2);
 	if (batteryStatus == -1)
@@ -382,7 +382,7 @@ bool readAndDecodeBatteryStatus()
 }
 
 // Function to read and decode the Alarm Status (command 0x62)
-bool readAndDecodeAlarmStatus()
+bool BQ77307::readAndDecodeAlarmStatus()
 {
 	int alarmStatus = readRegister(0x62, 2);
 	if (alarmStatus == -1)
@@ -422,7 +422,7 @@ bool readAndDecodeAlarmStatus()
 }
 
 // Function to read and decode the Raw Alarm Status (command 0x64)
-bool readAndDecodeAlarmStatusRaw()
+bool BQ77307::readAndDecodeAlarmStatusRaw()
 {
 	int alarmStatus = readRegister(0x64, 2);
 	if (alarmStatus == -1)
@@ -462,7 +462,7 @@ bool readAndDecodeAlarmStatusRaw()
 }
 
 // Function to read and decode the Alarm Status (command 0x66)
-bool readAndDecodeAlarmStatusEnabled()
+bool BQ77307::readAndDecodeAlarmStatusEnabled()
 {
 	int alarmStatus = readRegister(0x66, 2);
 	if (alarmStatus == -1)
@@ -502,7 +502,7 @@ bool readAndDecodeAlarmStatusEnabled()
 }
 
 // Function to read and decode the Fet Control Status (command 0x68)
-bool readAndDecodeFetControl()
+bool BQ77307::readAndDecodeFetControl()
 {
 	int fetControl = readRegister(0x68);
 	if (fetControl == -1)
@@ -526,7 +526,7 @@ bool readAndDecodeFetControl()
 }
 
 // Function to read and decode the REGOUT Control Status (command 0x69)
-bool readAndDecodeREGOUTControl()
+bool BQ77307::readAndDecodeREGOUTControl()
 {
 	int fetControl = readRegister(0x69);
 	if (fetControl == -1)
@@ -570,36 +570,36 @@ bool readAndDecodeREGOUTControl()
 }
 
 // This command is sent to reset the device
-void Reset()
+void BQ77307::Reset()
 {
 	sendCommand(0x0012);
 }
 
 // This command is sent to toggle the FET_EN bit in Battery Status().
-void Toggle_FET_Control()
+void BQ77307::Toggle_FET_Control()
 {
 	sendCommand(0x0022);
 }
 
 // This command is sent to place the device in SEALED mode
-void Seal_Configuration()
+void BQ77307::Seal_Configuration()
 {
 	sendCommand(0x0030);
 }
 
 // This command is sent to place the device in CONFIG_UPDATE mode
-void Enter_Configuration_Mode()
+void BQ77307::Enter_Configuration_Mode()
 {
 	sendCommand(0x0090);
 }
 
 // This command is sent to exit CONFIG_UPDATE mode
-void Exit_Configuration_Mode()
+void BQ77307::Exit_Configuration_Mode()
 {
 	sendCommand(0x0092);
 }
 
-void Enable_CRC() {
+void BQ77307::Enable_CRC() {
 	if (CRC_ENABLED) return; // If CRC is already enabled, do nothing.
 	int value = readRegister(0x9017, 2); // Read the current value of the register.
 	value |= 1; // Set bit 0.
@@ -607,7 +607,7 @@ void Enable_CRC() {
 	CRC_ENABLED = true; // Set the flag to true as CRC is now enabled.
 }
 
-void Disable_CRC() {
+void BQ77307::Disable_CRC() {
 	if (!CRC_ENABLED) return; // If CRC is already disabled, do nothing.
 	int value = readRegister(0x9017, 2); // Read the current value of the register.
 	value &= ~1; // Clear bit 0.
@@ -616,18 +616,3 @@ void Disable_CRC() {
 }
 
 // Sub Commands 9.4
-
-void setup()
-{
-	Serial.print("BQ77307 intializing on address ");
-	Serial.print(_bq77307Address);
-	Serial.println("...");
-
-	Wire.begin(); // Join I2C bus
-
-	Serial.println("BQ77307 status:");
-	readAndDecodeSafetyAlertA();
-	readAndDecodeSafetyStatusA();
-	readAndDecodeSafetyAlertB();
-	readAndDecodeSafetyStatusB();
-}

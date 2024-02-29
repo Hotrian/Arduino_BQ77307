@@ -1,28 +1,44 @@
-#ifndef BQ77307_h
-#define BQ77307_h
+#ifndef BQ77307_H
+#define BQ77307_H
 
-#include "Arduino.h"
-#include <Wire.h> // Include the Arduino Wire library for I2C communication
+#include <Arduino.h>
+#include <Wire.h>
 
 class BQ77307 {
 public:
-	BQ77307(uint8_t deviceAddress); // Constructor with the I2C device address
-	void begin(TwoWire& wirePort = Wire); // Initialize communication with the BQ77307, defaulting to the standard Wire port
-	float readBatteryVoltage(); // Method to read battery voltage
-	float readBatteryCurrent(); // Method to read battery current
-	int readBatteryTemperature(); // Method to read battery temperature
-	bool isCharging(); // Method to check if the battery is charging
-	bool isFullyCharged(); // Method to check if the battery is fully charged
-	void setChargeCurrentLimit(float current); // Method to set the charge current limit
+    BQ77307();
+
+    // Function declarations
+    void sendCommand(byte regAddress);
+    bool readAndDecodeSafetyAlertA();
+    bool readAndDecodeSafetyFaultA();
+    bool readAndDecodeSafetyAlertB();
+    bool readAndDecodeSafetyFaultB();
+    bool readAndDecodeBatteryStatus();
+    bool readAndDecodeAlarmStatus();
+    bool readAndDecodeAlarmStatusRaw();
+    bool readAndDecodeAlarmStatusEnabled();
+    bool readAndDecodeFetControl();
+    bool readAndDecodeREGOUTControl();
+    void Reset();
+    void Toggle_FET_Control();
+    void Seal_Configuration();
+    void Enter_Configuration_Mode();
+    void Exit_Configuration_Mode();
+    void Enable_CRC();
+    void Disable_CRC();
+    int readRegister(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000);
+    int readRegister(byte regAddress, byte* buffer, byte numBytes, unsigned long timeout = 1000);
 
 private:
-	TwoWire* _wire; // Pointer to the I2C bus (Wire) instance
-	uint8_t _deviceAddress; // I2C device address of the BQ77307
-	// Private method to send a read command to the BQ77307
-	uint8_t readRegister8(uint8_t reg);
-	// Private method to write a value to a register of the BQ77307
-	void writeRegister8(uint8_t reg, uint8_t value);
-	// Add other private member variables and helper methods as needed for communication and data processing
+    byte calculateCRC(byte* data, byte length);
+    int readRegisterWithoutCRC(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000);
+    int readRegisterWithCRC(byte regAddress, byte numBytes = 1, unsigned long timeout = 1000);
+    void writeRegisterWithoutCRC(byte regAddress, byte value);
+
+    const byte _bq77307Address = 0x08;
+    const int I2C_BUFFER_LENGTH = 32;
+    bool CRC_ENABLED = false;
 };
 
-#endif
+#endif // BQ77307_H
